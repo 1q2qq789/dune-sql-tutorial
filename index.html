@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dune SQL & 链上数据分析 · 学习教程</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --accent: #f78166;
+    --accent2: #79c0ff;
+    --accent3: #7ee787;
+    --accent4: #d2a8ff;
+    --accent5: #ffa657;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --tag-bg: #1f2d3d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0d1117 0%, #161b40 60%, #0d2440 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(121,192,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(247,129,102,0.15);
+    border: 1px solid rgba(247,129,102,0.35);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: .5px;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    margin-bottom: 16px;
+  }
+  header h1 span { color: var(--accent2); }
+  header p {
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 620px;
+  }
+  .header-tags {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 20px;
+  }
+  .tag {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  /* ── LAYOUT ── */
+  .layout {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 20px;
+    gap: 28px;
+  }
+  /* ── NAV ── */
+  nav {
+    width: 230px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    align-self: flex-start;
+  }
+  nav h3 {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    padding-left: 12px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13.5px;
+    transition: all .15s;
+    margin-bottom: 2px;
+    text-decoration: none;
+  }
+  .nav-item:hover, .nav-item.active {
+    background: var(--surface);
+    color: var(--text);
+  }
+  .nav-item.active { color: var(--accent2); }
+  .nav-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .nav-item.active .nav-dot { background: var(--accent2); }
+  /* ── CONTENT ── */
+  main { flex: 1; min-width: 0; }
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px;
+    margin-bottom: 24px;
+    scroll-margin-top: 20px;
+  }
+  .section-header {
+    display: flex; align-items: flex-start; gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .section-num {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .section h2 { font-size: 1.35rem; font-weight: 700; }
+  .section > p, .section > .content p {
+    color: #adb5bd;
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+  /* ── CODE ── */
+  .code-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+    position: relative;
+  }
+  .code-block pre {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #e6edf3;
+  }
+  .code-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  /* SQL syntax highlight classes */
+  .kw { color: #ff7b72; font-weight: 600; } /* keywords */
+  .fn { color: #d2a8ff; } /* functions */
+  .str { color: #a5d6ff; } /* strings/identifiers */
+  .num { color: #79c0ff; } /* numbers */
+  .cmt { color: #8b949e; font-style: italic; } /* comments */
+  .tbl { color: #7ee787; } /* table names */
+  .col { color: #ffa657; } /* columns */
+  /* ── CARDS ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 16px 0;
+  }
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    transition: border-color .2s;
+  }
+  .card:hover { border-color: #484f58; }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .card p { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+  /* ── TABLE ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 16px 0;
+  }
+  .data-table th {
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #21262d;
+    color: #adb5bd;
+    vertical-align: top;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td:first-child { color: var(--accent2); font-family: monospace; font-size: 12px; font-weight: 600; }
+  /* ── ALERT ── */
+  .alert {
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 16px 0;
+    font-size: 13.5px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .alert-tip { background: rgba(126,231,135,0.08); border: 1px solid rgba(126,231,135,0.25); }
+  .alert-warn { background: rgba(255,166,87,0.08); border: 1px solid rgba(255,166,87,0.25); }
+  .alert-info { background: rgba(121,192,255,0.08); border: 1px solid rgba(121,192,255,0.25); }
+  .alert-tip .alert-icon { color: var(--accent3); }
+  .alert-warn .alert-icon { color: var(--accent5); }
+  .alert-info .alert-icon { color: var(--accent2); }
+  .alert-content { color: #adb5bd; line-height: 1.6; }
+  .alert-content strong { color: var(--text); }
+  /* ── STEPS ── */
+  .steps { counter-reset: step; }
+  .step {
+    display: flex; gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #21262d;
+  }
+  .step:last-child { border-bottom: none; margin-bottom: 0; }
+  .step-num {
+    counter-increment: step;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent2);
+    flex-shrink: 0;
+  }
+  .step-content h4 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .step-content p { font-size: 13.5px; color: var(--muted); }
+  /* ── HIGHLIGHT ── */
+  .hl { color: var(--accent2); font-weight: 600; }
+  .hl-green { color: var(--accent3); }
+  .hl-orange { color: var(--accent5); }
+  .hl-purple { color: var(--accent4); }
+  .hl-red { color: var(--accent); }
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+  }
+  .progress-bar h3 { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .modules {
+    display: flex; gap: 4px;
+  }
+  .module-pill {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+  }
+  .module-pill.done { background: var(--accent2); }
+  .module-pill.current { background: var(--accent5); }
+  /* responsive */
+  @media (max-width: 800px) {
+    .layout { flex-direction: column; }
+    nav { width: 100%; position: static; }
+    header { padding: 32px 20px; }
+    header h1 { font-size: 1.8rem; }
+    .section { padding: 20px; }
+    .card-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">📖 基础教程 · v1.0</div>
+  <h1>Dune SQL &amp; <span>以太坊链上数据</span>分析<br>学习教程</h1>
+  <p>从 EVM 数据结构到 DuneSQL 实战，系统掌握链上数据查询的核心技能。</p>
+  <div class="header-tags">
+    <span class="tag">DuneSQL / Trino</span>
+    <span class="tag">EVM 数据模型</span>
+    <span class="tag">链上分析</span>
+    <span class="tag">CAST &amp; 类型转换</span>
+    <span class="tag">增量查询</span>
+    <span class="tag">容错处理</span>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- NAV -->
+  <nav>
+    <h3>章节目录</h3>
+    <a class="nav-item active" href="#s0"><span class="nav-dot"></span>学习路径总览</a>
+    <a class="nav-item" href="#s1"><span class="nav-dot"></span>EVM 与数据表结构</a>
+    <a class="nav-item" href="#s2"><span class="nav-dot"></span>表的层级与关系</a>
+    <a class="nav-item" href="#s3"><span class="nav-dot"></span>基础 SQL 语法</a>
+    <a class="nav-item" href="#s4"><span class="nav-dot"></span>数据类型与 CAST</a>
+    <a class="nav-item" href="#s5"><span class="nav-dot"></span>时间、聚合、JOIN</a>
+    <a class="nav-item" href="#s6"><span class="nav-dot"></span>容错处理实战</a>
+    <a class="nav-item" href="#s7"><span class="nav-dot"></span>增量查询模式</a>
+    <a class="nav-item" href="#s8"><span class="nav-dot"></span>常用函数速查</a>
+  </nav>
+
+  <!-- MAIN -->
+  <main>
+    <!-- Progress -->
+    <div class="progress-bar">
+      <h3>学习进度 · 8 个核心模块</h3>
+      <div class="modules">
+        <div class="module-pill done"></div>
+        <div class="module-pill done"></div>
+        <div class="module-pill done"></div>
+        <div class="module-pill current"></div>
+        <div class="module-pill"></div>
+        <div class="module-pill"></div>
+        <div class="module-pill"></div>
+        <div class="module-pill"></div>
+      </div>
+    </div>
+
+    <!-- SECTION 0: 学习路径 -->
+    <div class="section" id="s0">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(247,129,102,0.12)">🗺️</div>
+        <div>
+          <div class="section-num">Section 00</div>
+          <h2>学习路径总览</h2>
+        </div>
+      </div>
+      <p>本教程源自 Andrew Hong（Dune Analytics Wizard）的权威指南，并结合实际查询笔记整理而成。建议按如下顺序循序渐进：</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-content">
+            <h4>理解 EVM → 数据表的映射关系</h4>
+            <p>搞清楚一笔链上交易如何拆分成 transactions / logs / traces 三张表，这是一切查询的基础认知。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-content">
+            <h4>掌握表层级：Raw → Decoded → Spellbook</h4>
+            <p>了解数据从原始字节到解码表再到聚合魔法书的演化过程，知道什么时候该用哪张表。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-content">
+            <h4>练习基础 SQL</h4>
+            <p>SELECT / WHERE / GROUP BY / JOIN 四件套，配合真实的 Dune 查询案例练习。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-content">
+            <h4>掌握类型转换与容错</h4>
+            <p>CAST、NULLIF、COALESCE、try() 是日常查询不出错的关键护盾。</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-content">
+            <h4>学习增量查询模式</h4>
+            <p>大规模时序数据分析的核心范式，节省成本并提升查询效率。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 1: EVM -->
+    <div class="section" id="s1">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(121,192,255,0.12)">⛓️</div>
+        <div>
+          <div class="section-num">Section 01</div>
+          <h2>EVM 与数据表的映射关系</h2>
+        </div>
+      </div>
+      <p>EVM（以太坊虚拟机）是以太坊、Polygon、Arbitrum、Optimism 等链共用的标准，因此它们的原始数据输出格式一致。理解一笔交易如何产生多张数据表的数据，是一切查询的出发点。</p>
+
+      <div class="alert alert-info">
+        <span class="alert-icon">💡</span>
+        <div class="alert-content"><strong>核心记忆点：</strong> 所有表都通过 <code>tx_hash</code>（交易哈希）相互关联。一笔交易可以在多张表中产生多行数据，但在 <code>transactions</code> 表中始终只有一行。</div>
+      </div>
+
+      <h4 style="font-size:14px;margin:20px 0 12px;color:var(--text)">一笔 Uniswap Swap 会写入哪些表？</h4>
+      <table class="data-table">
+        <thead>
+          <tr><th>表名</th><th>写入内容</th><th>行数</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ethereum.transactions</td><td>整笔交易记录（from/to/input/gas）</td><td>1 行</td></tr>
+          <tr><td>ethereum.logs</td><td>Swap() 事件 + 2个 Transfer() 事件</td><td>3 行</td></tr>
+          <tr><td>ethereum.traces</td><td>swap() 函数调用 + 2个 transfer() 调用</td><td>3+ 行</td></tr>
+          <tr><td>uniswap_v2_ethereum.Pair_evt_Swap</td><td>解码后的 Swap 事件</td><td>1 行</td></tr>
+          <tr><td>erc20_ethereum.evt_Transfer</td><td>代币转入/转出事件（Spellbook）</td><td>2 行</td></tr>
+          <tr><td>dex.trades</td><td>聚合交易数据（Spellbook）</td><td>1 行</td></tr>
+        </tbody>
+      </table>
+
+      <div class="alert alert-warn">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-content"><strong>关键区别：</strong> <code>tx_hash</code> 在 transactions 表里是唯一的，但在 logs / traces 等表里<strong>可能有多行</strong>（因为一笔交易可触发多个事件/调用）。</div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: 表层级 -->
+    <div class="section" id="s2">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(126,231,135,0.12)">📚</div>
+        <div>
+          <div class="section-num">Section 02</div>
+          <h2>Dune 表的五个层级</h2>
+        </div>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">🟡 Raw 原始表</div>
+          <p><code>transactions</code> <code>logs</code> <code>traces</code> <code>blocks</code>。数据最原始，大量字节数组（0x开头），实时性最强，但查询最难。</p>
+        </div>
+        <div class="card">
+          <div class="card-title">🔵 Decoded 解码表</div>
+          <p>基于合约 ABI 解码，如 <code>uniswap_v2_ethereum.Pair_evt_Swap</code>。格式：<code>namespace_chain.Contract_evt_EventName</code>。</p>
+        </div>
+        <div class="card">
+          <div class="card-title">🟢 Spellbook 魔法书</div>
+          <p>用 SQL 聚合构建的高层表，如 <code>dex.trades</code> <code>erc20_ethereum.evt_Transfer</code> <code>tokens.erc20</code>。有数据延迟。</p>
+        </div>
+        <div class="card">
+          <div class="card-title">🟠 Community 社区数据</div>
+          <p>第三方数据集，如 Flashbots MEV 数据、Reservoir NFT 数据，通过 tx_hash 与 Dune 数据关联。</p>
+        </div>
+        <div class="card">
+          <div class="card-title">🟣 User Views 用户视图</div>
+          <p>每个公开查询都变成视图，用 <code>query_&lt;id&gt;</code> 语法引用。只支持 DuneSQL 引擎的查询。</p>
+        </div>
+      </div>
+
+      <div class="alert alert-tip">
+        <span class="alert-icon">✅</span>
+        <div class="alert-content"><strong>选表原则：</strong>优先用 Spellbook（最省力）→ Decoded（精确查某合约）→ Raw（需要原始字节数据时）。<br>代币相关表始终用 <strong>地址（address）而非 symbol</strong> 做关联，避免同名代币混淆。</div>
+      </div>
+
+      <h4 style="font-size:14px;margin:20px 0 10px;color:var(--text)">常用 Spellbook 表速查</h4>
+      <table class="data-table">
+        <thead><tr><th>表名</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td>tokens.erc20</td><td>ERC20 代币名称、小数位数（必备 JOIN 表）</td></tr>
+          <tr><td>erc20_ethereum.evt_Transfer</td><td>以太坊全部 ERC20 转账事件</td></tr>
+          <tr><td>prices.usd</td><td>代币 USD 价格（API来源）</td></tr>
+          <tr><td>dex.prices</td><td>代币价格（DEX 汇率计算）</td></tr>
+          <tr><td>dex.trades</td><td>所有 DEX 聚合交易数据</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 3: SQL 语法 -->
+    <div class="section" id="s3">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(210,168,255,0.12)">📝</div>
+        <div>
+          <div class="section-num">Section 03</div>
+          <h2>基础 SQL 语法</h2>
+        </div>
+      </div>
+
+      <p>DuneSQL 基于 Trino SQL，以下是查询的完整骨架结构（方括号为可选）：</p>
+      <div class="code-block">
+        <div class="code-label">SQL 查询骨架</div>
+        <pre><span class="cmt">-- 1. 可选：定义公共表表达式 (CTE)</span>
+[<span class="kw">WITH</span> <span class="str">subquery_name</span> <span class="kw">AS</span> (...)]
+
+<span class="cmt">-- 2. 核心：选择列</span>
+<span class="kw">SELECT</span> [<span class="kw">DISTINCT</span>] <span class="col">col1</span>, <span class="col">col2</span>, <span class="fn">COUNT</span>(*) <span class="kw">AS</span> cnt
+
+<span class="cmt">-- 3. 数据来源</span>
+<span class="kw">FROM</span> <span class="tbl">some_table</span>
+
+<span class="cmt">-- 4. 可选：表关联</span>
+[<span class="kw">LEFT JOIN</span> <span class="tbl">other_table</span> <span class="kw">ON</span> <span class="tbl">some_table</span>.<span class="col">tx_hash</span> = <span class="tbl">other_table</span>.<span class="col">tx_hash</span>]
+
+<span class="cmt">-- 5. 过滤条件（在聚合前）</span>
+[<span class="kw">WHERE</span> <span class="col">block_time</span> &gt;= <span class="kw">NOW</span>() - <span class="kw">INTERVAL</span> <span class="str">'7'</span> <span class="kw">DAY</span>]
+
+<span class="cmt">-- 6. 分组</span>
+[<span class="kw">GROUP BY</span> <span class="col">col1</span>, <span class="col">col2</span>]
+
+<span class="cmt">-- 7. 过滤条件（在聚合后）</span>
+[<span class="kw">HAVING</span> <span class="fn">COUNT</span>(*) &gt; <span class="num">10</span>]
+
+<span class="cmt">-- 8. 排序 & 分页</span>
+[<span class="kw">ORDER BY</span> cnt <span class="kw">DESC</span>]
+[<span class="kw">LIMIT</span> <span class="num">100</span>]</pre>
+      </div>
+
+      <h4 style="font-size:14px;margin:20px 0 12px;color:var(--text)">示例：查询 Aave v3 在 Optimism 上的唯一供应者</h4>
+      <div class="code-block">
+        <pre><span class="kw">SELECT DISTINCT</span>
+  <span class="col">user</span> <span class="kw">AS</span> supplier_address
+<span class="kw">FROM</span> <span class="tbl">aave_v3_optimism.Pool_evt_Supply</span>
+<span class="kw">WHERE</span> <span class="col">evt_block_time</span> &gt;= <span class="kw">NOW</span>() - <span class="kw">INTERVAL</span> <span class="str">'30'</span> <span class="kw">DAY</span></pre>
+      </div>
+
+      <h4 style="font-size:14px;margin:20px 0 12px;color:var(--text)">UNION ALL：合并多个 Uniswap v2 swap 函数</h4>
+      <div class="code-block">
+        <pre><span class="cmt">-- Uniswap v2 Router 有多个 swap 函数，需要 UNION ALL 全部取到</span>
+<span class="kw">WITH</span> all_swaps <span class="kw">AS</span> (
+  <span class="kw">SELECT</span> <span class="col">evt_tx_hash</span>, <span class="col">evt_block_time</span>, <span class="str">'swapExactTokensForTokens'</span> <span class="kw">AS</span> fn_name
+  <span class="kw">FROM</span> <span class="tbl">uniswap_v2_ethereum.Router_call_swapExactTokensForTokens</span>
+
+  <span class="kw">UNION ALL</span>
+
+  <span class="kw">SELECT</span> <span class="col">evt_tx_hash</span>, <span class="col">evt_block_time</span>, <span class="str">'swapExactETHForTokens'</span>
+  <span class="kw">FROM</span> <span class="tbl">uniswap_v2_ethereum.Router_call_swapExactETHForTokens</span>
+)
+<span class="kw">SELECT</span> <span class="fn">DATE_TRUNC</span>(<span class="str">'day'</span>, <span class="col">evt_block_time</span>) <span class="kw">AS</span> day,
+       <span class="fn">COUNT</span>(*) <span class="kw">AS</span> total_swaps
+<span class="kw">FROM</span> all_swaps
+<span class="kw">GROUP BY</span> <span class="num">1</span>
+<span class="kw">ORDER BY</span> <span class="num">1</span> <span class="kw">DESC</span></pre>
+      </div>
+    </div>
+
+    <!-- SECTION 4: 类型转换 -->
+    <div class="section" id="s4">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(255,166,87,0.12)">🔄</div>
+        <div>
+          <div class="section-num">Section 04</div>
+          <h2>数据类型与 CAST 转换</h2>
+        </div>
+      </div>
+
+      <p>链上数据字段经常以字符串（VARCHAR）或大整数（BIGINT）存储，必须正确转换才能计算。</p>
+
+      <table class="data-table">
+        <thead><tr><th>类型</th><th>说明</th><th>常见场景</th></tr></thead>
+        <tbody>
+          <tr><td>VARCHAR</td><td>字符串，大多数列的默认类型</td><td>地址、符号、名称</td></tr>
+          <tr><td>DOUBLE</td><td>双精度浮点数，用于所有数值计算</td><td>金额、价格、比率</td></tr>
+          <tr><td>VARBINARY</td><td>字节数组，0x开头的原始数据</td><td>data、topics、input 列</td></tr>
+          <tr><td>TIMESTAMP</td><td>时间戳，时间函数的基础类型</td><td>block_time、evt_block_time</td></tr>
+          <tr><td>BIGINT</td><td>大整数，代币原始金额</td><td>value、amount（需除以精度）</td></tr>
+        </tbody>
+      </table>
+
+      <h4 style="font-size:14px;margin:20px 0 12px;color:var(--text)">CAST 的四种核心用法</h4>
+      <div class="code-block">
+        <pre><span class="cmt">-- ① 字符串 → 数值（字段存成 '1500.50' 的情况）</span>
+<span class="fn">CAST</span>(<span class="col">amount_usd</span> <span class="kw">AS DOUBLE</span>) <span class="kw">AS</span> amount
+
+<span class="cmt">-- ② 整数除法（不转换 1/2=0，转换后 1/2=0.5）</span>
+<span class="fn">CAST</span>(<span class="num">1</span> <span class="kw">AS DOUBLE</span>) / <span class="num">2</span>  <span class="cmt">-- 正确返回 0.5</span>
+
+<span class="cmt">-- ③ 字符串 → 时间戳（用于时间过滤）</span>
+<span class="fn">CAST</span>(<span class="str">'2026-01-01'</span> <span class="kw">AS TIMESTAMP</span>)
+
+<span class="cmt">-- ④ UNION 拼表时统一列类型</span>
+<span class="kw">SELECT</span> <span class="fn">CAST</span>(<span class="col">amount</span> <span class="kw">AS DOUBLE</span>) <span class="kw">FROM</span> <span class="tbl">table_a</span>
+<span class="kw">UNION ALL</span>
+<span class="kw">SELECT</span> <span class="fn">CAST</span>(<span class="col">volume</span> <span class="kw">AS DOUBLE</span>) <span class="kw">FROM</span> <span class="tbl">table_b</span>
+
+<span class="cmt">-- ⑤ 实战：ERC20 交易量统计（需先转类型再 SUM）</span>
+<span class="fn">SUM</span>(<span class="fn">CAST</span>(<span class="col">amount_usd</span> <span class="kw">AS DOUBLE</span>)) <span class="kw">AS</span> usd_volume</pre>
+      </div>
+
+      <div class="alert alert-warn">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-content"><strong>常见报错原因：</strong>对超大整数（如代币原始金额 1e18 量级）直接 SUM，超出 BIGINT 上限会报错崩溃。<strong>务必先 CAST AS DOUBLE 再聚合。</strong></div>
+      </div>
+
+      <h4 style="font-size:14px;margin:20px 0 12px;color:var(--text)">代币金额的精度处理</h4>
+      <div class="code-block">
+        <pre><span class="cmt">-- 原始 value 是 wei (1 ETH = 1e18 wei)，需要除以 10^decimals</span>
+<span class="fn">SUM</span>(<span class="fn">CAST</span>(<span class="col">value</span> <span class="kw">AS DOUBLE</span>) / <span class="fn">POW</span>(<span class="num">10</span>, t.<span class="col">decimals</span>)) <span class="kw">AS</span> amount_token
+
+<span class="cmt">-- 如果 JOIN tokens.erc20 失败（没有该代币），用默认 18 位精度</span>
+<span class="fn">SUM</span>(<span class="fn">CAST</span>(<span class="col">value</span> <span class="kw">AS DOUBLE</span>) / <span class="fn">COALESCE</span>(<span class="fn">POW</span>(<span class="num">10</span>, t.<span class="col">decimals</span>), <span class="num">1e18</span>)) <span class="kw">AS</span> amount_token</pre>
+      </div>
+    </div>
+
+    <!-- SECTION 5: 时间/聚合/JOIN -->
+    <div class="section" id="s5">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(126,231,135,0.12)">🔗</div>
+        <div>
+          <div class="section-num">Section 05</div>
+          <h2>时间函数 · 聚合 · JOIN</h2>
+        </div>
+      </div>
+
+      <h4 style="font-size:14px;margin:0 0 12px;color:var(--text)">三个每天必用的时间函数</h4>
+      <div class="code-block">
+        <pre><span class="cmt">-- 1. date_trunc：向下取整到指定精度（类似 floor）</span>
+<span class="fn">DATE_TRUNC</span>(<span class="str">'day'</span>, <span class="col">block_time</span>)     <span class="cmt">-- 2026-03-11 14:32 → 2026-03-11 00:00</span>
+<span class="fn">DATE_TRUNC</span>(<span class="str">'month'</span>, <span class="col">block_time</span>)   <span class="cmt">-- → 2026-03-01 00:00</span>
+
+<span class="cmt">-- 2. NOW()：查询运行时的当前 UTC 时间</span>
+<span class="kw">WHERE</span> <span class="col">block_time</span> &gt;= <span class="kw">NOW</span>() - <span class="kw">INTERVAL</span> <span class="str">'7'</span> <span class="kw">DAY</span>
+
+<span class="cmt">-- 3. 时间字符串转 timestamp</span>
+<span class="kw">WHERE</span> <span class="col">block_time</span> &gt; <span class="kw">TIMESTAMP</span> <span class="str">'2026-01-01 00:00:00'</span></pre>
+      </div>
+
+      <h4 style="font-size:14px;margin:20px 0 12px;color:var(--text)">常用聚合函数</h4>
+      <div class="code-block">
+        <pre><span class="fn">COUNT</span>(*)                          <span class="cmt">-- 总行数</span>
+<span class="fn">COUNT</span>(<span class="kw">DISTINCT</span> <span class="col">sender</span>)           <span class="cmt">-- 唯一用户数</span>
+<span class="fn">SUM</span>(<span class="fn">CAST</span>(<span class="col">amount</span> <span class="kw">AS DOUBLE</span>))      <span class="cmt">-- 总金额</span>
+<span class="fn">AVG</span>(<span class="col">gas_used</span>)                     <span class="cmt">-- 平均 gas</span>
+<span class="fn">MAX</span>(<span class="col">block_time</span>)                   <span class="cmt">-- 最新时间</span>
+<span class="fn">APPROX_DISTINCT</span>(<span class="col">sender</span>)          <span class="cmt">-- 近似唯一数（更快）</span>
+<span class="fn">APPROX_PERCENTILE</span>(<span class="col">amount</span>, <span class="num">0.5</span>)  <span class="cmt">-- 中位数</span>
+
+<span class="cmt">-- HAVING：GROUP BY 之后的过滤（不是 WHERE！）</span>
+<span class="kw">GROUP BY</span> <span class="col">sender</span>
+<span class="kw">HAVING</span> <span class="fn">SUM</span>(<span class="fn">CAST</span>(<span class="col">amount_eth</span> <span class="kw">AS DOUBLE</span>)) &gt; <span class="num">100</span>
+<span class="cmt">-- 筛选出过去 10 天内累计交换超过 100 ETH 的地址</span></pre>
+      </div>
+
+      <h4 style="font-size:14px;margin:20px 0 12px;color:var(--text)">JOIN 使用场景</h4>
+      <div class="code-block">
+        <pre><span class="cmt">-- 场景 1：LEFT JOIN tokens.erc20 获取代币符号和精度</span>
+<span class="kw">SELECT</span>
+  t.<span class="col">contract_address</span>,
+  <span class="fn">COALESCE</span>(tok.<span class="col">symbol</span>, <span class="str">'Unknown'</span>) <span class="kw">AS</span> symbol,
+  <span class="fn">SUM</span>(<span class="fn">CAST</span>(t.<span class="col">value</span> <span class="kw">AS DOUBLE</span>) / <span class="fn">POW</span>(<span class="num">10</span>, <span class="fn">COALESCE</span>(tok.<span class="col">decimals</span>, <span class="num">18</span>))) <span class="kw">AS</span> amount
+<span class="kw">FROM</span> <span class="tbl">erc20_ethereum.evt_Transfer</span> t
+<span class="kw">LEFT JOIN</span> <span class="tbl">tokens.erc20</span> tok
+  <span class="kw">ON</span> t.<span class="col">contract_address</span> = tok.<span class="col">contract_address</span>
+  <span class="kw">AND</span> tok.<span class="col">blockchain</span> = <span class="str">'ethereum'</span>
+<span class="kw">WHERE</span> t.<span class="col">evt_block_time</span> &gt;= <span class="kw">NOW</span>() - <span class="kw">INTERVAL</span> <span class="str">'1'</span> <span class="kw">DAY</span>
+<span class="kw">GROUP BY</span> <span class="num">1</span>, <span class="num">2</span>
+<span class="kw">ORDER BY</span> amount <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="num">50</span>
+
+<span class="cmt">-- 场景 2：JOIN transactions 获取 from/to（事件表本身没有这些列）</span>
+<span class="kw">SELECT</span>
+  s.<span class="col">evt_tx_hash</span>,
+  tx.<span class="col">from</span> <span class="kw">AS</span> wallet_address
+<span class="kw">FROM</span> <span class="tbl">uniswap_v2_ethereum.Pair_evt_Swap</span> s
+<span class="kw">JOIN</span> <span class="tbl">ethereum.transactions</span> tx
+  <span class="kw">ON</span> s.<span class="col">evt_tx_hash</span> = tx.<span class="col">hash</span>
+<span class="kw">WHERE</span> s.<span class="col">contract_address</span> = <span class="str">0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc</span></pre>
+      </div>
+
+      <div class="alert alert-warn">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-content"><strong>不要盲信列名！</strong> 事件表里的 <code>sender</code> ≠ 交易的 <code>from</code>。务必搞清楚每列的实际含义，必要时 JOIN transactions 表获取真实来源地址。</div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: 容错处理 -->
+    <div class="section" id="s6">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(247,129,102,0.12)">🛡️</div>
+        <div>
+          <div class="section-num">Section 06</div>
+          <h2>容错处理：防崩溃三件套</h2>
+        </div>
+      </div>
+
+      <p>链上数据常有缺失值、除以零、类型转换失败等异常情况，以下三个函数是防崩溃必备。</p>
+
+      <h4 style="font-size:14px;margin:0 0 12px;color:var(--text)">① NULLIF — 防止除以零报错</h4>
+      <div class="code-block">
+        <pre><span class="cmt">-- 原理：如果 dex_volume = 0，则返回 NULL（任何数 / NULL = NULL，不会报错）</span>
+a.<span class="col">agg_volume</span> / <span class="fn">NULLIF</span>(d.<span class="col">dex_volume</span>, <span class="num">0</span>) * <span class="num">100</span> <span class="kw">AS</span> aggregator_pct
+
+<span class="cmt">-- 完整解读：</span>
+<span class="cmt">-- NULLIF(d.dex_volume, 0) → 若值为0，替换为 NULL</span>
+<span class="cmt">-- agg_volume / NULL        → 结果是 NULL（不报错，不崩溃）</span>
+<span class="cmt">-- * 100 AS aggregator_pct  → 格式化为百分比展示</span></pre>
+      </div>
+
+      <h4 style="font-size:14px;margin:20px 0 12px;color:var(--text)">② COALESCE — 空值兜底替换</h4>
+      <div class="code-block">
+        <pre><span class="cmt">-- 返回第一个非 NULL 的值</span>
+<span class="fn">SELECT</span> <span class="fn">COALESCE</span>(<span class="kw">NULL</span>, <span class="kw">NULL</span>, <span class="num">1</span>)    <span class="cmt">-- 返回 1</span>
+<span class="fn">SELECT</span> <span class="fn">COALESCE</span>(<span class="kw">NULL</span>, <span class="num">2</span>, <span class="kw">NULL</span>, <span class="num">32</span>) <span class="cmt">-- 返回 2</span>
+
+<span class="cmt">-- 实战：LEFT JOIN 失败时用默认精度</span>
+<span class="fn">COALESCE</span>(tok.<span class="col">decimals</span>, <span class="num">18</span>) <span class="kw">AS</span> decimals
+
+<span class="cmt">-- 实战：代币符号找不到时显示 Unknown</span>
+<span class="fn">COALESCE</span>(tok.<span class="col">symbol</span>, <span class="str">'Unknown'</span>) <span class="kw">AS</span> symbol
+
+<span class="cmt">-- 实战：组合 try() + coalesce() 设置兜底值</span>
+<span class="fn">SELECT</span> <span class="fn">COALESCE</span>(<span class="fn">TRY</span>(<span class="num">1</span>/<span class="num">0</span>), <span class="num">10</span>)  <span class="cmt">-- 返回 10</span></pre>
+      </div>
+
+      <h4 style="font-size:14px;margin:20px 0 12px;color:var(--text)">③ TRY() — 静默处理运行时错误</h4>
+      <div class="code-block">
+        <pre><span class="fn">SELECT</span> <span class="num">1</span>/<span class="num">0</span>               <span class="cmt">-- ❌ 报错，查询终止</span>
+<span class="fn">SELECT</span> <span class="fn">TRY</span>(<span class="num">1</span>/<span class="num">0</span>)          <span class="cmt">-- ✅ 返回 NULL，查询继续</span>
+<span class="fn">SELECT</span> <span class="fn">COALESCE</span>(<span class="fn">TRY</span>(<span class="num">1</span>/<span class="num">0</span>), <span class="num">10</span>)  <span class="cmt">-- ✅ 返回 10</span>
+
+<span class="cmt">-- 适合用于：类型转换可能失败、除法可能出现0分母的场合</span></pre>
+      </div>
+
+      <div class="alert alert-tip">
+        <span class="alert-icon">💡</span>
+        <div class="alert-content"><strong>实战记忆法：</strong><br>
+        • <code>NULLIF(col, 0)</code> → <strong>除法分母用它</strong>，防除零<br>
+        • <code>COALESCE(col, default)</code> → <strong>JOIN 之后用它</strong>，防 NULL<br>
+        • <code>TRY(expr)</code> → <strong>不确定能否成功的计算用它</strong>，防崩溃</div>
+      </div>
+    </div>
+
+    <!-- SECTION 7: 增量查询 -->
+    <div class="section" id="s7">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(121,192,255,0.12)">⚡</div>
+        <div>
+          <div class="section-num">Section 07</div>
+          <h2>增量查询模式（Incremental Query）</h2>
+        </div>
+      </div>
+
+      <p>对于需要每天刷新的时序数据，全量扫描成本极高。增量查询模式通过「只扫描新增数据」的方式大幅降低成本。</p>
+
+      <div class="alert alert-info">
+        <span class="alert-icon">💡</span>
+        <div class="alert-content"><strong>核心逻辑：</strong> 首次运行扫全量，之后每次只扫 <code>cutoff</code> 之后的新数据，再与历史结果 UNION ALL 合并输出。</div>
+      </div>
+
+      <h4 style="font-size:14px;margin:16px 0 12px;color:var(--text)">完整增量查询模板（以太坊每日交易统计）</h4>
+      <div class="code-block">
+        <pre><span class="cmt">-- ① 加载上一次运行的历史结果（首次运行为空表）</span>
+<span class="kw">WITH</span> prev <span class="kw">AS</span> (
+  <span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="fn">TABLE</span>(<span class="fn">previous.query.result</span>(
+    <span class="col">schema</span> => <span class="fn">DESCRIPTOR</span>(
+      <span class="col">day</span>        <span class="kw">TIMESTAMP</span>(<span class="num">3</span>),
+      <span class="col">tx_count</span>   <span class="kw">BIGINT</span>,
+      <span class="col">total_gas</span>  <span class="kw">BIGINT</span>
+    )
+  ))
+),
+
+<span class="cmt">-- ② 找到"截止点"：历史最新一天往前退一天（lookback window）</span>
+checkpoint <span class="kw">AS</span> (
+  <span class="kw">SELECT</span>
+    <span class="fn">COALESCE</span>(<span class="fn">MAX</span>(<span class="col">day</span>), <span class="kw">TIMESTAMP</span> <span class="str">'2015-07-30'</span>)
+      - <span class="kw">INTERVAL</span> <span class="str">'1'</span> <span class="kw">DAY</span> <span class="kw">AS</span> cutoff
+  <span class="kw">FROM</span> prev
+)
+
+<span class="cmt">-- ③ 保留历史旧数据（不需要重新计算的部分）</span>
+<span class="kw">SELECT</span> <span class="col">day</span>, <span class="col">tx_count</span>, <span class="col">total_gas</span>
+<span class="kw">FROM</span> prev
+<span class="kw">WHERE</span> <span class="col">day</span> < (<span class="kw">SELECT</span> cutoff <span class="kw">FROM</span> checkpoint)
+
+<span class="kw">UNION ALL</span>
+
+<span class="cmt">-- ④ 计算 cutoff 之后的新数据</span>
+<span class="kw">SELECT</span>
+  <span class="fn">DATE_TRUNC</span>(<span class="str">'day'</span>, <span class="col">block_time</span>) <span class="kw">AS</span> day,
+  <span class="fn">COUNT</span>(*)                       <span class="kw">AS</span> tx_count,
+  <span class="fn">SUM</span>(<span class="col">gas_used</span>)                   <span class="kw">AS</span> total_gas
+<span class="kw">FROM</span> <span class="tbl">ethereum.transactions</span>
+<span class="kw">WHERE</span> <span class="col">block_time</span> >= (<span class="kw">SELECT</span> cutoff <span class="kw">FROM</span> checkpoint)
+<span class="kw">GROUP BY</span> <span class="num">1</span>
+
+<span class="cmt">-- ⑤ 合并历史 + 新增，按时间排序</span>
+<span class="kw">ORDER BY</span> day</pre>
+      </div>
+
+      <h4 style="font-size:14px;margin:20px 0 12px;color:var(--text)">图解增量逻辑</h4>
+      <div class="code-block">
+        <pre><span class="cmt">历史结果:   2018-01-01  ...  2025-01-05</span>
+<span class="cmt">                                    ↓</span>
+<span class="cmt">cutoff    = MAX(day) - 1 day = 2025-01-04</span>
+<span class="cmt">                                    ↓</span>
+<span class="cmt">保留旧数据:  2018-01-01  ...  2025-01-03  (day &lt; cutoff)</span>
+<span class="cmt">重新计算:   2025-01-04  ...  今天         (block_time &gt;= cutoff)</span>
+<span class="cmt">                                    ↓</span>
+<span class="cmt">最终输出:   UNION ALL 拼接 → 完整时间序列</span></pre>
+      </div>
+
+      <div class="card-grid" style="margin-top:16px">
+        <div class="card">
+          <div class="card-title" style="color:var(--accent3)">✅ 优势</div>
+          <p>首次运行全量扫描后，后续每次只扫新增区间，大幅减少计算成本（Dune 按量计费）</p>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--accent5)">⚠️ 注意</div>
+          <p>往前退一天是 lookback window，避免最后一天数据不完整导致漏统计。设计时要考虑这个边界。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 8: 速查表 -->
+    <div class="section" id="s8">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(210,168,255,0.12)">📋</div>
+        <div>
+          <div class="section-num">Section 08</div>
+          <h2>常用函数速查表</h2>
+        </div>
+      </div>
+
+      <table class="data-table">
+        <thead><tr><th>函数/语法</th><th>作用</th><th>示例</th></tr></thead>
+        <tbody>
+          <tr><td>DATE_TRUNC('day', col)</td><td>时间向下取整</td><td>2026-03-11 14:32 → 2026-03-11</td></tr>
+          <tr><td>NOW()</td><td>当前 UTC 时间</td><td>WHERE block_time >= NOW() - INTERVAL '7' DAY</td></tr>
+          <tr><td>CAST(col AS DOUBLE)</td><td>类型转换</td><td>SUM(CAST(amount AS DOUBLE))</td></tr>
+          <tr><td>NULLIF(col, 0)</td><td>值为0时返回 NULL</td><td>防除零：col / NULLIF(denom, 0)</td></tr>
+          <tr><td>COALESCE(a, b)</td><td>取第一个非 NULL</td><td>COALESCE(symbol, 'Unknown')</td></tr>
+          <tr><td>TRY(expr)</td><td>出错返回 NULL</td><td>TRY(1/0) → NULL</td></tr>
+          <tr><td>ROUND(n, 2)</td><td>保留小数</td><td>ROUND(3.14159, 2) → 3.14</td></tr>
+          <tr><td>POW(10, 18)</td><td>幂运算</td><td>value / POW(10, decimals)</td></tr>
+          <tr><td>LOWER(col)</td><td>转小写</td><td>地址对比前统一转小写</td></tr>
+          <tr><td>LIKE '%keyword%'</td><td>模糊匹配</td><td>WHERE name LIKE '%USDC%'</td></tr>
+          <tr><td>IN (a, b, c)</td><td>集合匹配</td><td>WHERE address IN (addr1, addr2)</td></tr>
+          <tr><td>IS NULL / IS NOT NULL</td><td>空值检查</td><td>WHERE creation IS NULL（EOA 判断）</td></tr>
+          <tr><td>CASE WHEN...END</td><td>条件分类</td><td>CASE WHEN type='buy' THEN 1 ELSE 0 END</td></tr>
+          <tr><td>CONCAT(a, b)</td><td>字符串拼接</td><td>超链接、可读地址</td></tr>
+          <tr><td>query_&lt;id&gt;</td><td>引用其他查询</td><td>FROM query_1782010 (仅 DuneSQL)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="alert alert-tip">
+        <span class="alert-icon">🚀</span>
+        <div class="alert-content"><strong>学完基础后的下一步：</strong> 阅读 Andrew Hong 的《Advanced Wizard Guide》，深入学习查询优化、Gas 分析、MEV 检测、复杂跨链分析等进阶技巧。关键优化原则：<strong>始终在时间列上过滤，在唯一 hash/ID 列上 JOIN</strong>。</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Nav active state on scroll
+  const sections = document.querySelectorAll('.section');
+  const navItems = document.querySelectorAll('.nav-item');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navItems.forEach(n => n.classList.remove('active'));
+        const active = document.querySelector(`.nav-item[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
